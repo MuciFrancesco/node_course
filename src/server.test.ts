@@ -213,3 +213,30 @@ describe("DELETE /planets/:id", () => {
         expect(response.text).toContain("Cannot DELETE /planets/asda");
     });
 });
+
+//questo test depend on : src/lib/middlewere/multer.mock.ts E usa multer.memoryStorage quindi nessun file viene scritto su disco.
+
+describe("POST /planets/:id/photo", () => {
+    test("Valid Request with JPG file upload", async () => {
+        await request
+            .post("/planets/10/photo")
+            .attach("photo", "test-fixtures/photo/heart.jpg")
+            .expect(201)
+            .expect("Access-Control-Allow-Origin", "http://localhost:8080");
+    });
+
+    test("Invalid planet ID", async () => {
+        const response = await request
+            .post("/planets/ads/photo")
+            .expect(404)
+            .expect("Content-Type", html);
+        expect(response.text).toContain("Cannot POST /planets/ads/photo");
+    });
+    test("Invalid request with no file upload", async () => {
+        const response = await request
+            .post("/planets/23/photo")
+            .expect(400) //client error (request send incorect) (NO PHOTO)
+            .expect("Content-Type", html);
+        expect(response.text).toContain("No photo file uploaded");
+    });
+});
