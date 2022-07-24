@@ -3,7 +3,7 @@ import { response } from "express";
 import { Validator, ValidationError } from "express-json-validator-middleware";
 import { ErrorRequestHandler } from "express";
 
-const validator = new Validator({});
+const validator = new Validator({ coerceTypes: true });
 
 addFormats(validator.ajv, ["date-time"])
     .addKeyword("kind")

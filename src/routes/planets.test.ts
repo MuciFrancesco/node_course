@@ -1,7 +1,7 @@
 import { response } from "express";
 import supertest from "supertest";
-import app from "./app";
-import { prismaMock } from "./lib/prisma/client.mock";
+import app from "../app";
+import { prismaMock } from "../lib/prisma/client.mock";
 const jsonRequest = /application\/json/; //pattern specifico
 const html = /text\/html/;
 const request = supertest(app);
@@ -223,6 +223,35 @@ describe("POST /planets/:id/photo", () => {
             .attach("photo", "test-fixtures/photo/heart.jpg")
             .expect(201)
             .expect("Access-Control-Allow-Origin", "http://localhost:8080");
+    });
+    test("Valid Request with JPG file upload", async () => {
+        await request
+            .post("/planets/10/photo")
+            .attach("photo", "test-fixtures/photo/heart.jpg")
+            .expect(201)
+            .expect("Access-Control-Allow-Origin", "http://localhost:8080");
+    });
+    test("Invalid Request with TXT file upload", async () => {
+        const response = await request
+            .post("/planets/10/photo")
+            .attach("photo", "test-fixtures/photo/file.txt")
+            .expect(500) //errore di multer 500 quando un type di un file non e corretto
+            .expect("Content-Type", html);
+        expect(response.text).toContain(
+            "Error: The uploaded file must be a JPG or PNG extenction"
+        );
+    });
+
+    test("Planet does not exist", async () => {
+        // @ts-ignore
+        prismaMock.planet.update.mockRejectedValue(new Error("error"));
+
+        const response = await request
+            .post("/planets/1/photo")
+            .attach("photo", "test-fixtures/photo/heart.jpg")
+            .expect(404)
+            .expect("Content-Type", html);
+        expect(response.text).toContain("Cannot POST /planets/1/photo");
     });
 
     test("Invalid planet ID", async () => {
